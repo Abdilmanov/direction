@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Directions widget - 4.13</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.13/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.13/"></script>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/widgets/Directions",
+        "esri/tasks/Locator",
+        "esri/symbols/SimpleMarkerSymbol"
+      ], function(Map, MapView, Directions, Locator, SimpleMarkerSymbol) {
+        var map = new Map({
+          basemap: "topo-vector"
+        });
+
+        var view = new MapView({
+          map: map,
+          container: "viewDiv",
+          center: [71.400957, 51.089915],
+          scale: "4000"
+        });
+        var stairs_url = "https://kazaerospace01/arcgis/rest/services/NU/routeStairs/NAServer/%D0%9C%D0%B0%D1%80%D1%88%D1%80%D1%83%D1%82"
+        var elevator_url = "https://kazaerospace01/arcgis/rest/services/NU/Routeelevator/NAServer/%D0%9C%D0%B0%D1%80%D1%88%D1%80%D1%83%D1%82"
+        var directionsWidget = new Directions({
+          view: view,
+          routeServiceUrl: stairs_url,
+          searchProperties: {
+            popupEnabled: true,
+            resultGraphicEnabled: true,
+            searchAllEnabled: false,
+            activeSourceIndex: 1,
+            sources: [
+              {
+                locator: new Locator({
+                  url:
+                    "https://kazaerospace01/arcgis/rest/services/NU/RoomsLocSF/GeocodeServer"
+                }),
+                outFields: ["*"]
+              }
+            ]
+          }
+        });
+        view.ui.add(directionsWidget, {
+          position: "top-right"
+        });
+        view.when(function() {
+          let div_splitter = document.querySelector('div.esri-directions__section-splitter');
+          let select = document.createElement("select");
+          select.setAttribute("class", "esri-directions__travel-modes-select esri-select")
+          select.setAttribute("id", "switch");
+          select.setAttribute("aria-label", "лестница");
+          select.setAttribute("title", "лестница");
+          let option1 = document.createElement("option");
+          let option2 = document.createElement("option");
+          option1.setAttribute("value", "1");
+          option1.innerHTML = 'Лестница';
+          option2.setAttribute("value", "2");
+          option2.innerHTML = 'Лифт';
+          select.append(option1);
+          select.append(option2);
+          console.log(select)
+          setTimeout(() => {
+            div_splitter.before(select);
+          }, 1000)
+          
+          // let select_switch = document.querySelector("#switch");
+          // console.log(select_switch)
+          let select_index = select.selectedIndex;
+          select.addEventListener('click', function() {
+            if (select_index != select.selectedIndex) {
+              if (select.selectedIndex == 0) {
+                directionsWidget.routeServiceUrl = stairs_url;
+                directionsWidget.getDirections();
+              } else if (select.selectedIndex == 1) {
+                directionsWidget.routeServiceUrl = elevator_url;
+                directionsWidget.getDirections();
+              }
+              select_index = select.selectedIndex;
+            }
+          })
+          
+        })
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
